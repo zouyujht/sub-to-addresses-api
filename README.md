@@ -1,13 +1,11 @@
 # sub-to-addresses-api
 
-模仿 [edgetunnel](https://github.com/cmliu/edgetunnel) 中「优选订阅生成器」逻辑：
-
 1. 用固定占位参数请求上游 `/sub`
 2. 解码 Base64 订阅
 3. 从带假 UUID / `example.com` 的节点里解析出真实 `IP:端口`（或 `域名:端口`）
 4. 输出纯文本列表，格式兼容 edgetunnel / gate 等项目的「优选 API」
 
-输出示例（与 `https://cf.090227.xyz/ct?ips=6&port=443` 同类）：
+输出示例：
 
 ```text
 1.2.3.4:443#备注
