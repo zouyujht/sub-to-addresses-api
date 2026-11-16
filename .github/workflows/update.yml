@@ -16,6 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Require SUB_HOST secret
+        env:
+          SUB_HOST: ${{ secrets.SUB_HOST }}
+        run: |
+          if [ -z "$SUB_HOST" ]; then
+            echo "::error::未配置 Secret SUB_HOST。请到 Settings → Secrets and variables → Actions 添加 Secret SUB_HOST（上游订阅生成器域名）。"
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -23,9 +32,9 @@ jobs:
 
       - name: Fetch addresses
         env:
-          SUB_HOST: ${{ vars.SUB_HOST || '339389037wtkr.sub.hhauv.de5.net' }}
-          DEFAULT_PORT: ${{ vars.DEFAULT_PORT || '443' }}
-          LIMIT: ${{ vars.LIMIT || '0' }}
+          SUB_HOST: ${{ secrets.SUB_HOST }}
+          DEFAULT_PORT: ${{ secrets.DEFAULT_PORT || '443' }}
+          LIMIT: ${{ secrets.LIMIT || '0' }}
           OUTPUT: addressesapi.txt
         run: python fetch_addresses.py
 

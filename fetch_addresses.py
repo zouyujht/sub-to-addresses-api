@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""从优选订阅生成器提取 IP:端口 列表（与 edgetunnel 逻辑对齐）。"""
+"""从优选订阅生成器提取 IP:端口 列表（与 edgetunnel 逻辑对齐）。
+
+SUB_HOST 必须通过环境变量或 Secret 提供，代码内无默认域名。
+"""
 
 from __future__ import annotations
 
@@ -11,7 +14,6 @@ from urllib.request import Request, urlopen
 
 FAKE_UUID = "00000000-0000-4000-8000-000000000000"
 FAKE_HOST = "example.com"
-DEFAULT_SUB_HOST = "339389037wtkr.sub.hhauv.de5.net"
 UA = "v2rayN/edgetunnel (https://github.com/cmliu/edgetunnel)"
 ADDR_RE = re.compile(r"://[^@\s]+@([^/?#\s]+)")
 REMARK_RE = re.compile(r"#(.+)$")
@@ -74,12 +76,14 @@ def parse_subscription(text: str, default_port: str = "443") -> list[str]:
 
 
 def fetch_addresses(sub_host: str | None = None, default_port: str = "443") -> list[str]:
-    host = (sub_host or os.environ.get("SUB_HOST") or DEFAULT_SUB_HOST).strip()
+    host = (sub_host or os.environ.get("SUB_HOST") or "").strip()
     host = re.sub(r"^https?://", "", host, flags=re.I)
     host = re.sub(r"^sub://", "", host, flags=re.I)
     host = host.split("/")[0].split("?")[0].split("#")[0].strip()
     if not host:
-        raise SystemExit("SUB_HOST 为空")
+        raise SystemExit(
+            "未设置 SUB_HOST。请配置环境变量，或在 GitHub Actions 中添加 Secret SUB_HOST。"
+        )
 
     url = f"https://{host}/sub?host={FAKE_HOST}&uuid={FAKE_UUID}"
     req = Request(url, headers={"User-Agent": UA})

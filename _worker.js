@@ -2,15 +2,14 @@
  * sub-to-addresses-api — Cloudflare Worker
  * 模仿 edgetunnel「优选订阅生成器」提取逻辑，输出纯文本 IP:端口 列表。
  *
- * 环境变量（可选）：
- *   SUB_HOST      上游生成器域名，默认 339389037wtkr.sub.hhauv.de5.net
+ * 环境变量：
+ *   SUB_HOST      上游生成器域名（必填，在 Worker Variables 中配置）
  *   DEFAULT_PORT  缺省端口，默认 443
  *   LIMIT         最多返回条数，0 表示不限制
  */
 
 const FAKE_UUID = '00000000-0000-4000-8000-000000000000';
 const FAKE_HOST = 'example.com';
-const DEFAULT_SUB_HOST = '339389037wtkr.sub.hhauv.de5.net';
 const UA =
   'v2rayN/edgetunnel (https://github.com/cmliu/edgetunnel)';
 
@@ -81,7 +80,7 @@ function parseSubscriptionText(text, defaultPort) {
 }
 
 async function fetchAddresses(subHost, defaultPort) {
-  const host = String(subHost || DEFAULT_SUB_HOST)
+  const host = String(subHost || '')
     .replace(/^https?:\/\//i, '')
     .replace(/^sub:\/\//i, '')
     .split('/')[0]
@@ -89,7 +88,9 @@ async function fetchAddresses(subHost, defaultPort) {
     .split('#')[0]
     .trim();
 
-  if (!host) throw new Error('SUB_HOST 为空');
+  if (!host) {
+    throw new Error('未配置 SUB_HOST，请在 Worker Variables 中设置上游订阅生成器域名');
+  }
 
   const url = `https://${host}/sub?host=${FAKE_HOST}&uuid=${FAKE_UUID}`;
   const response = await fetch(url, {
@@ -121,7 +122,7 @@ export default {
       return new Response('Not Found', { status: 404 });
     }
 
-    const subHost = url.searchParams.get('sub') || env.SUB_HOST || DEFAULT_SUB_HOST;
+    const subHost = url.searchParams.get('sub') || env.SUB_HOST || '';
     const defaultPort =
       url.searchParams.get('port') || env.DEFAULT_PORT || '443';
     let limit = Number(url.searchParams.get('limit') || env.LIMIT || '0');
